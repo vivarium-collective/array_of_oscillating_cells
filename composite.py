@@ -63,13 +63,18 @@ def run_composite(
     time_slices = [total_time]
     mol_ids = [
         'X',
-        # 'Y',
-        'Yex', 
-        # 'Xex'
+        'Y',
+        'Yex',
+        'Xex'
     ]
-    plot_heatmaps(data, time_slices, mol_ids)
+    plot_heatmaps(data, time_slices, mol_ids,
+                  # output_dir='output', filename='composite'
+                  )
 
 
 
 if __name__ == '__main__':
-    run_composite(total_time=10, gridr=15, gridc=15)
+    run_composite(total_time=10,
+                  gridr=9,
+                  gridc=9
+                  )

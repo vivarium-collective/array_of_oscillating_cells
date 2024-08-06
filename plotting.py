@@ -37,11 +37,12 @@ def plot_heatmaps(data, time_slices, mol_ids, output_dir=None, filename=None):
                 plt.figure(figsize=(8, 6))
                 plt.imshow(heatmap_internal, cmap='viridis', interpolation='none')
                 plt.colorbar()
-                plt.title(f'Internal {mol_id} at Time Index {time_index}')
+                plt.title(f'{mol_id} at Time Index {time_index}')
                 plt.xlabel('Column')
                 plt.ylabel('Row')
 
                 if output_dir and filename:
+                    os.makedirs(output_dir, exist_ok=True)
                     file_path = os.path.join(output_dir, f"{filename}_internal_{mol_id}_time_{time_index}.png")
                     plt.savefig(file_path)
                 else:
@@ -51,11 +52,12 @@ def plot_heatmaps(data, time_slices, mol_ids, output_dir=None, filename=None):
                 plt.figure(figsize=(8, 6))
                 plt.imshow(heatmap_boundary, cmap='viridis', interpolation='none')
                 plt.colorbar()
-                plt.title(f'Boundary {mol_id} at Time Index {time_index}')
+                plt.title(f'{mol_id} at Time Index {time_index}')
                 plt.xlabel('Column')
                 plt.ylabel('Row')
 
                 if output_dir and filename:
+                    os.makedirs(output_dir, exist_ok=True)
                     file_path = os.path.join(output_dir, f"{filename}_boundary_{mol_id}_time_{time_index}.png")
                     plt.savefig(file_path)
                 else:

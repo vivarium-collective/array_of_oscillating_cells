@@ -27,6 +27,23 @@ def _set_initial_concentrations(changes, dm):
 
     model.updateInitialValues(references)
 
+def _set_parameters(changes, dm):
+    model = dm.getModel()
+    assert (isinstance(model, COPASI.CModel))
+
+    references = COPASI.ObjectStdVector()
+
+    for name, value in changes:
+        parameter = model.getModelParameterSets().getParameter(name)
+        assert (isinstance(parameter, COPASI.CModelValue))
+        if parameter is None:
+            print(f"Parameter {name} not found in model")
+            continue
+        parameter.setValue(value)
+        references.append(parameter.getValueReference())
+
+    model.updateInitialValues(references)
+
 
 def _get_transient_concentration(name, dm):
     model = dm.getModel()
@@ -46,6 +63,7 @@ class CellProcess(Process):
         'boundary_molecules': ['Xex'],
         'n_sides': 4,
         'time_step': 1.0,
+        'parameter_noise': {'alpha': 0.1},
     }
 
     def __init__(self, parameters=None):
@@ -60,6 +78,15 @@ class CellProcess(Process):
         self.internal_species = [
             species for species in all_species if species not in self.parameters['boundary_molecules']]
         self.boundary_species = self.parameters['boundary_molecules']
+
+        # get the parameters for which we need to add noise
+        self.noise_parameters = {}
+        for param, noise in self.parameters['parameter_noise'].items():
+            p = get_parameters(name=param, model=self.copasi_model_object)
+            value = p['initial_value'][0]
+            # add noise to the parameter from uniform distribution
+            sampled = np.random.uniform(-noise, noise)
+            self.noise_parameters[param] = value + sampled
 
     def ports_schema(self):
         ports = {
@@ -83,15 +110,19 @@ class CellProcess(Process):
 
     def next_update(self, endtime, states):
 
-        # set boundary species concentrations
+        # set species concentrations
         changes = []
         for mol_id, value in states['boundary'].items():
             # if mol_id.endswith('_ext'):
             changes.append((mol_id, value))
         for mol_id, value in states['internal'].items():
             changes.append((mol_id, value))
-
         _set_initial_concentrations(changes, self.copasi_model_object)
+
+        # set parameters
+        for param, value in self.noise_parameters.items():
+            set_reaction_parameters(name=param, value=value, model=self.copasi_model_object)
+            # self.copasi_model_object.set_reaction_parameters(param, value)
 
         # run model for "endtime" length; we only want the state at the end of endtime, if we need more we can set intervals to a larger value
         timecourse = run_time_course(duration=endtime, intervals=1, update_model=True, model=self.copasi_model_object)
