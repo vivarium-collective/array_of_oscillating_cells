@@ -1,3 +1,6 @@
+import random
+import time
+
 from process import CellProcess, DEFAULT_MODEL_FILE
 from plotting import plot_heatmaps
 from vivarium.core.engine import Engine
@@ -18,6 +21,7 @@ def make_composite(
     # make the composite
     processes = {}
     topology = {}
+    initial_state = {}
     for row in range(0, gridr):
         for col in range(0, gridc):
             config = {
@@ -33,9 +37,16 @@ def make_composite(
                 'boundary': (f'{cell_id}_store', 'boundary'),
                 'internal': (f'{cell_id}_store', 'internal')
             }
+
+            initial_state[f'{cell_id}_store'] = {
+                'boundary': {
+                    mol_id: random.uniform(0, 0.1) for mol_id in boundary_molecules
+                },
+            }
     return {
         'processes': processes,
-        'topology': topology
+        'topology': topology,
+        'initial_state': initial_state,
     }
 
 
@@ -46,18 +57,24 @@ def run_composite(
         total_time=10,
 ):
     # make the composite
+
+    # time how long it takes
+    start = time.time()
     tissue_composite = make_composite(gridr=gridr,
                                       gridc=gridc,
                                       boundary_molecules=boundary_molecules)
+    print(f"Time to initialize composite: {time.time() - start}")
 
     # make the simulation
-    tissue = Engine(**tissue_composite)
+    tissue = Engine(**tissue_composite, display_info=True)
 
     # run the simulation
+    start = time.time()
     tissue.update(total_time)
+    print(f"Time to run simulation: {time.time() - start}")
 
     data = tissue.emitter.get_data()
-    print(data)
+    # print(data)
 
     # plot
     time_slices = [total_time]
@@ -68,13 +85,13 @@ def run_composite(
         'Xex'
     ]
     plot_heatmaps(data, time_slices, mol_ids,
-                  # output_dir='output', filename='composite'
+                  output_dir='output', filename='composite'
                   )
 
 
 
 if __name__ == '__main__':
     run_composite(total_time=10,
-                  gridr=9,
-                  gridc=9
+                  gridr=49,
+                  gridc=49
                   )
