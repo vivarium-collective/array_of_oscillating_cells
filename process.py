@@ -42,6 +42,7 @@ def _get_transient_concentration(name, dm):
 class CellProcess(Process):
     defaults = {
         'model_file': DEFAULT_MODEL_FILE,
+        'copasi_object': None,
         'boundary_molecules': ['Xex'],
         'n_sides': 4,
         'time_step': 1.0,
@@ -51,7 +52,10 @@ class CellProcess(Process):
         super().__init__(parameters)
 
         # Load the single cell model into Basico
-        self.copasi_model_object = load_model(self.parameters['model_file'])
+        if self.parameters['copasi_object']:
+            self.copasi_model_object = self.parameters['copasi_object']
+        else:
+            self.copasi_model_object = load_model(self.parameters['model_file'])
         all_species = get_species(model=self.copasi_model_object).index.tolist()
         self.internal_species = [
             species for species in all_species if species not in self.parameters['boundary_molecules']]
@@ -61,14 +65,14 @@ class CellProcess(Process):
         ports = {
             'boundary': {
                 mol_id: {
-                    '_default': 0.0,
+                    '_default': _get_transient_concentration(name=mol_id, dm=self.copasi_model_object),
                     '_emit': True,
                     '_updater': 'set',
                 } for mol_id in self.boundary_species
             },
             'internal': {
                 mol_id: {
-                    '_default': 0.0,
+                    '_default': _get_transient_concentration(name=mol_id, dm=self.copasi_model_object),
                     '_emit': True,
                     '_updater': 'set',
                 } for mol_id in self.internal_species
