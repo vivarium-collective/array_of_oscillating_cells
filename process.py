@@ -84,10 +84,11 @@ class CellProcess(Process):
     def next_update(self, endtime, states):
 
         # set boundary species concentrations
-        boundary_species = states['boundary']
         changes = []
-        for mol_id, value in boundary_species.items():
+        for mol_id, value in states['boundary'].items():
             # if mol_id.endswith('_ext'):
+            changes.append((mol_id, value))
+        for mol_id, value in states['internal'].items():
             changes.append((mol_id, value))
 
         _set_initial_concentrations(changes, self.copasi_model_object)

@@ -1,4 +1,5 @@
 from process import CellProcess, DEFAULT_MODEL_FILE
+from plotting import plot_heatmaps
 from vivarium.core.engine import Engine
 from basico import load_model
 
@@ -58,7 +59,17 @@ def run_composite(
     data = tissue.emitter.get_data()
     print(data)
 
+    # plot
+    time_slices = [total_time]
+    mol_ids = [
+        'X',
+        # 'Y',
+        'Yex', 
+        # 'Xex'
+    ]
+    plot_heatmaps(data, time_slices, mol_ids)
+
 
 
 if __name__ == '__main__':
-    run_composite()
+    run_composite(total_time=10, gridr=15, gridc=15)
